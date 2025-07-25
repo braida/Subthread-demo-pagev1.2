@@ -22,83 +22,6 @@
       margin-top: 30px;
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,  0, 0, 0.1);
-    }
-    .section-header {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #333;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      padding: 10px;
-      text-align: left;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-    th {
-      background-color: #f9f9f9;
-      color: #666;
-    }
-    .details {
-      display: none;
-      background-color: #fafafa;
-      border-top: 1px solid #ddd;
-    }
-    .control-panel {
-      margin-bottom: 20px;
-      background: #ffffff;
-      padding: 12px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    }
-    .btn {
-      background-color: #007acc;
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      cursor: pointer;
-      border-radius: 4px;
-      margin-left: 5px;
-    }
-    .btn:hover {
-      background-color: #005c8c;
-    }
-    .uplifting {
-      background-color: #c8f7c5;
-    }
-    #loading {
-      position: absolute;
-      top: 10px;
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title> 💭 Sentiment Insights – Live Data</title>
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      max-width: 960px;
-      background-color: #f4f7fa;
-      position: relative;
-    }
-    h1 {
-      font-size: 36px;
-      color: #333;
-      text-align: center;
-    }
-    .section {
-      margin-top: 30px;
-      padding: 20px;
-      border-radius: 8px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
     .section-header {
@@ -141,7 +64,6 @@
       padding: 6px 10px;
       cursor: pointer;
       border-radius: 4px;
-      margin-left: 5px;
     }
     .btn:hover {
       background-color: #005c8c;
@@ -162,14 +84,13 @@
   </style>
 </head>
 <body>
-<h1>💭 Sentiment Insights — Live Data</h1>
+<h1> 🤍Sentiment Insights — Live Data</h1>
 <div class="control-panel">
   <label for="startDate">Start Date:</label>
   <input type="date" id="startDate">
   <label for="endDate">End Date:</label>
   <input type="date" id="endDate">
   <button class="btn" onclick="applyDateRange()">Apply Date Range</button>
-  <button class="btn" onclick="toggleControversial()" id="toggleBtn">Show Controversial Posts</button>
 </div>
 <div id="loading">🔄 Loading data...</div>
 <div class="section">
@@ -183,10 +104,10 @@
 </div>
 <div class="section">
   <div class="section-header">📊 Sentiment Table</div>
-  <p>Top 30 Uplifting or Controversial Posts</p>
+  <p>Top 30 Uplifting Posts</p>
   <table id="sentimentTable">
     <thead>
-      <tr><th>#</th><th>Subreddit</th><th>Title</th><th>Polarity</th><th>Emotion</th><th>Date</th><th>Reddit Votes</th><th>Actions</th><th>Details</th></tr>
+      <tr><th>#</th><th>Subreddit</th><th>Title</th><th>Polarity</th><th>Emotion</th><th>Date</th><th>Reddit Score</th><th>Actions</th><th>Details</th></tr>
     </thead>
     <tbody id="sentimentTableBody"></tbody>
   </table>
@@ -196,14 +117,7 @@
   <div id="lineGraph" style="height:400px;"></div>
 </div>
 <script>
-  window.addEventListener('load', () => {
-    document.getElementById("startDate").value = getDefaultStartDate();
-    document.getElementById("endDate").value = getTodayDate();
-    applyDateRang
-    </script>
-  <script>
-  const popularSubreddits = ['selfimprovement', 'depression', 'mentalhealth', 'GetMotivated', 'work','palestine','tech','IRL','TLDR'];
-  let showControversial = false;
+  const popularSubreddits = ['selfimprovement', 'mentalhealth', 'GetMotivated', 'work','palestine','tech','IRL','tldr','TLDR'];
 
   function getTodayDate() {
     const today = new Date();
@@ -212,7 +126,7 @@
 
   function getDefaultStartDate() {
     const date = new Date();
-    date.setMonth(date.getMonth() - 3);
+    date.setMonth(date.getMonth() - 1);
     return date.toISOString().split('T')[0];
   }
 
@@ -221,8 +135,7 @@
     const end = new Date(document.getElementById("endDate").value);
     fetchRedditData(start, end);
   }
-
-  function toggleControversial() {
+function toggleControversial() {
     showControversial = !showControversial;
     document.getElementById("toggleBtn").innerText = showControversial ? "Show Most Positive Posts" : "Show Controversial Posts";
     applyDateRange();
@@ -234,17 +147,40 @@
   }
 
   function getSentimentScore(text) {
-    const positiveWords = ['happy','joy','excited','love','optimistic','inspired','grateful','amazing','proud','confident','hopeful','great','cheerful','uplifted','accomplished','peaceful','motivated','encouraged','better','progress','good life'];
-    const negativeWords = ['sad','angry','hate','depressed','frustrated','hopeless','anxious','scared','tired','lonely','miserable','worthless','failure','afraid','numb','crying','helpless','guilt','ashamed','stressed','death','ache','pain','grief','loss','broken','suffering','unworthy','hopelessness','mourning'];
-    const contrastWords = ['but','however','although'];
-    const negativePhrases = ["don't","can't","won't","shouldn't","give up","hate myself","suicide","trauma"];
+    const positiveWords = [
+      'happy', 'joy', 'excited', 'love', 'optimistic', 'inspired', 'grateful',
+      'amazing', 'proud', 'confident', 'hopeful', 'great', 'cheerful', 'uplifted',
+      'accomplished', 'peaceful', 'motivated', 'encouraged', 'better', 'progress', 'good life'
+    ];
+
+    const negativeWords = [
+      'sad', 'angry', 'hate', 'depressed', 'frustrated', 'hopeless', 'anxious',
+      'scared', 'tired', 'lonely', 'miserable', 'worthless', 'failure', 'afraid',
+      'numb','cried','cry', 'crying', 'helpless', 'guilt', 'ashamed', 'stressed','struggle','struggling','pessimistic','worry', 'worries',
+      'death', 'ache', 'pain', 'grief', 'loss', 'break-up','broken','broke', 'heal', 'suffering', 'punch', 'beating','unworthy', 'hopelessness', 'mourning'
+    ];
+
+    const contrastWords = ['but','despite', 'however', 'although'];
+    const negativePhrases = [
+      "don't", "can't","disgusting","disgusted", "won't","I'd","could’ve", "I would", "shouldn't", "give up", "hate myself", "suicide", "trauma", "struggle", "punching", "failed", "failure", 
+      "multiple attempts but", "worst part", "still pessimistic", "undervalued", "ignored", "disappointed", "shocked", "insulting"
+    ];
+
     const NEGATIVE_WEIGHT = 3;
     const PHRASE_PENALTY_PER_MATCH = 5;
+
     let positiveCount = 0;
     let negativeCount = 0;
     const lowerText = text.toLowerCase();
-    positiveWords.forEach(word => { if (lowerText.includes(word)) positiveCount++; });
-    negativeWords.forEach(word => { if (lowerText.includes(word)) negativeCount++; });
+
+    positiveWords.forEach(word => {
+      if (lowerText.includes(word)) positiveCount++;
+    });
+
+    negativeWords.forEach(word => {
+      if (lowerText.includes(word)) negativeCount++;
+    });
+
     for (const contrast of contrastWords) {
       const contrastIndex = lowerText.indexOf(contrast);
       if (contrastIndex !== -1) {
@@ -257,15 +193,19 @@
         }
       }
     }
+
     let phrasePenalty = 0;
     for (const phrase of negativePhrases) {
       if (lowerText.includes(phrase)) {
         phrasePenalty += PHRASE_PENALTY_PER_MATCH;
       }
     }
+
     const weightedNegatives = (negativeCount * NEGATIVE_WEIGHT) + phrasePenalty;
     const totalWeighted = positiveCount + weightedNegatives;
+
     if (totalWeighted === 0) return 0;
+
     return (positiveCount - weightedNegatives) / totalWeighted;
   }
 
@@ -354,7 +294,7 @@
                        <td>${stats.count}</td><td>${avg.toFixed(2)}</td>`;
       subredditTableBody.appendChild(row);
     });
-
+    
     plotLineGraph(dateStats);
     document.getElementById("loading").style.display = 'none';
   }
