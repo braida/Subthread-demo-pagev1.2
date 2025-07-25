@@ -75,6 +75,83 @@
     #loading {
       position: absolute;
       top: 10px;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title> 💭 Sentiment Insights – Live Data</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      max-width: 960px;
+      background-color: #f4f7fa;
+      position: relative;
+    }
+    h1 {
+      font-size: 36px;
+      color: #333;
+      text-align: center;
+    }
+    .section {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .section-header {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    th {
+      background-color: #f9f9f9;
+      color: #666;
+    }
+    .details {
+      display: none;
+      background-color: #fafafa;
+      border-top: 1px solid #ddd;
+    }
+    .control-panel {
+      margin-bottom: 20px;
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    .btn {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-left: 5px;
+    }
+    .btn:hover {
+      background-color: #005c8c;
+    }
+    .uplifting {
+      background-color: #c8f7c5;
+    }
+    #loading {
+      position: absolute;
+      top: 10px;
       right: 10px;
       background: #fff;
       padding: 8px 12px;
@@ -85,7 +162,7 @@
   </style>
 </head>
 <body>
-<h1>🤍 Sentiment Insights — Live Data</h1>
+<h1>💭 Sentiment Insights — Live Data</h1>
 <div class="control-panel">
   <label for="startDate">Start Date:</label>
   <input type="date" id="startDate">
@@ -106,7 +183,7 @@
 </div>
 <div class="section">
   <div class="section-header">📊 Sentiment Table</div>
-  <p>Top 30 Uplifting Posts</p>
+  <p>Top 30 Uplifting or Controversial Posts</p>
   <table id="sentimentTable">
     <thead>
       <tr><th>#</th><th>Subreddit</th><th>Title</th><th>Polarity</th><th>Emotion</th><th>Date</th><th>Reddit Votes</th><th>Actions</th><th>Details</th></tr>
@@ -119,6 +196,12 @@
   <div id="lineGraph" style="height:400px;"></div>
 </div>
 <script>
+  window.addEventListener('load', () => {
+    document.getElementById("startDate").value = getDefaultStartDate();
+    document.getElementById("endDate").value = getTodayDate();
+    applyDateRang
+    </script>
+  <script>
   const popularSubreddits = ['selfimprovement', 'depression', 'mentalhealth', 'GetMotivated', 'work','palestine','tech','IRL','TLDR'];
   let showControversial = false;
 
