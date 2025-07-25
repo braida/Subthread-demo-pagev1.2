@@ -151,17 +151,18 @@
     const negativeWords = [
       'sad', 'angry', 'hate', 'depressed', 'frustrated', 'hopeless', 'anxious',
       'scared', 'tired', 'lonely', 'miserable', 'worthless', 'failure', 'afraid',
-      'numb', 'crying', 'helpless', 'guilt', 'ashamed', 'stressed',
-      'death', 'ache', 'pain', 'grief', 'loss', 'broken', 'suffering', 'unworthy', 'hopelessness', 'mourning'
+      'numb','cried','cry', 'crying', 'helpless', 'guilt', 'ashamed', 'stressed','struggle','struggling','pessimistic','worry', 'worries',
+      'death', 'ache', 'pain', 'grief', 'loss', 'break-up','broken','broke', 'heal', 'suffering', 'punch', 'beating','unworthy', 'hopelessness', 'mourning'
     ];
 
-    const contrastWords = ['but', 'however', 'although'];
+    const contrastWords = ['but','despite', 'however', 'although'];
     const negativePhrases = [
-      "don't", "can't", "won't", "shouldn't", "give up", "hate myself", "suicide", "trauma"
+      "don't", "can't","disgusting","disgusted", "won't","I'd","could’ve", "I would", "shouldn't", "give up", "hate myself", "suicide", "trauma", "struggle", "punching", "failed", "failure", 
+      "multiple attempts but", "worst part", "still pessimistic"
     ];
 
-    const NEGATIVE_WEIGHT = 2;
-    const PHRASE_PENALTY_PER_MATCH = 3;
+    const NEGATIVE_WEIGHT = 3;
+    const PHRASE_PENALTY_PER_MATCH = 5;
 
     let positiveCount = 0;
     let negativeCount = 0;
