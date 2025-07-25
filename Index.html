@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🧠 Sentiment Insights – Live Data</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      max-width: 960px;
+      background-color: #f4f7fa;
+      position: relative;
+    }
+    h1 {
+      font-size: 36px;
+      color: #333;
+      text-align: center;
+    }
+    .section {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .section-header {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    th {
+      background-color: #f9f9f9;
+      color: #666;
+    }
+    .details {
+      display: none;
+      background-color: #fafafa;
+      border-top: 1px solid #ddd;
+    }
+    .control-panel {
+      margin-bottom: 20px;
+      background: #ffffff;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    .btn {
+      background-color: #007acc;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .btn:hover {
+      background-color: #005c8c;
+    }
+    .uplifting {
+      background-color: #c8f7c5;
+    }
+    #loading {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #fff;
+      padding: 8px 12px;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<h1>🧠 Sentiment Insights — Live Data</h1>
+<div class="control-panel">
+  <label for="startDate">Start Date:</label>
+  <input type="date" id="startDate">
+  <label for="endDate">End Date:</label>
+  <input type="date" id="endDate">
+  <button class="btn" onclick="applyDateRange()">Apply Date Range</button>
+</div>
+<div id="loading">🔄 Loading data...</div>
+<div class="section">
+  <div class="section-header">🏆 Subreddit Uplift Ranking (Top 10 Most Positive Subreddits)</div>
+  <table id="subredditTable">
+    <thead>
+      <tr><th>Subreddit</th><th>Comments</th><th>Avg Polarity</th></tr>
+    </thead>
+    <tbody id="subredditTableBody"></tbody>
+  </table>
+</div>
+<div class="section">
+  <div class="section-header">📊 Sentiment Table</div>
+  <p>Top 30 Uplifting Posts</p>
+  <table id="sentimentTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Subreddit</th>
+        <th>Title</th>
+        <th>Polarity</th>
+        <th>Emotion</th>
+        <th>Date</th>
+        <th>Actions</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody id="sentimentTableBody"></tbody>
+  </table>
+</div>
+<div class="section">
+  <div class="section-header">📈 Average Polarity Over Time</div>
+  <div id="lineGraph" style="height:400px;"></div>
+</div>
+<script>
+  const popularSubreddits = [
+    'selfimprovement', 'depression', 'mentalhealth', 'GetMotivated', 'work',
+    'TIL', 'TLDR', 'ireland', 'todayilearned', 'UpliftingNews',
+    'DecidingToBeBetter', 'nosurf', 'Anxiety', 'LifeProTips',
+    'productivity', 'offmychest', 'TrueOffMyChest'
+  ];
+
+  function getSentimentScore(text) {
+    const positiveWords = ['happy', 'joy', 'excited', 'love', 'optimistic', 'inspired', 'grateful', 'amazing', 'proud', 'confident', 'hopeful', 'great', 'cheerful', 'uplifted', 'accomplished', 'peaceful', 'motivated', 'encouraged', 'better', 'progress'];
+    const negativeWords = ['sad', 'angry', 'hate', 'depressed', 'frustrated', 'hopeless', 'anxious', 'scared', 'tired', 'lonely', 'miserable', 'worthless', 'failure', 'afraid', 'numb', 'crying', 'helpless', 'guilt', 'ashamed', 'stressed', 'death', 'ache', 'pain', 'grief', 'loss', 'broken', 'suffering', 'unworthy', 'hopelessness', 'mourning'];
+    const contrastWords = ['but', 'however', 'although'];
+    const negativePhrases = ["i don't", "i can't", "i won't", "i shouldn't", "i give up", "i hate myself"];
+
+    const NEGATIVE_WEIGHT = 1.5;
+    const PHRASE_PENALTY_PER_MATCH = 3;
+
+    let positiveCount = 0;
+    let negativeCount = 0;
+    const lowerText = text.toLowerCase();
+
+    positiveWords.forEach(word => {
+      if (lowerText.includes(word)) positiveCount++;
+    });
+    negativeWords.forEach(word => {
+      if (lowerText.includes(word)) negativeCount++;
+    });
+
+    contrastWords.forEach(word => {
+      const index = lowerText.indexOf(word);
+      if (index !== -1) {
+        const before = lowerText.slice(0, index);
+        for (const pos of positiveWords) {
+          if (before.includes(pos)) {
+            positiveCount = Math.max(0, positiveCount - 2);
+            break;
+          }
+        }
+      }
+    });
+
+    let phrasePenalty = 0;
+    negativePhrases.forEach(phrase => {
+      if (lowerText.includes(phrase)) {
+        phrasePenalty += PHRASE_PENALTY_PER_MATCH;
+      }
+    });
+
+    const weightedNeg = (negativeCount * NEGATIVE_WEIGHT) + phrasePenalty;
+    const total = positiveCount + weightedNeg;
+    if (total === 0) return 0;
+
+    return (positiveCount - weightedNeg) / total;
+  }
+
+  async function fetchPostsForSubreddit(subreddit, startDate, endDate, limit = 200) {
+    let posts = [];
+    let after = null;
+    let fetched = 0;
+
+    while (fetched < limit) {
+      const url = `https://www.reddit.com/r/${subreddit}/top.json?limit=100${after ? `&after=${after}` : ''}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (!data.data) break;
+
+      const batch = data.data.children;
+      after = data.data.after;
+      for (let post of batch) {
+        const createdDate = new Date(post.data.created_utc * 1000);
+        if (createdDate >= startDate && createdDate <= endDate) {
+          posts.push(post);
+        }
+      }
+      fetched += batch.length;
+      if (!after) break;
+    }
+    return posts;
+  }
+</script>
+</body>
+</html>
