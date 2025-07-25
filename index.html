@@ -20,7 +20,7 @@
     }
     .section {
       margin-top: 30px;
-      padding:  20px;
+      padding: 20px;
       border-radius: 8px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
@@ -107,16 +107,7 @@
   <p>Top 30 Uplifting Posts</p>
   <table id="sentimentTable">
     <thead>
-      <tr>
-        <th>#</th>
-        <th>Subreddit</th>
-        <th>Title</th>
-        <th>Polarity</th>
-        <th>Emotion</th>
-        <th>Date</th>
-        <th>Actions</th>
-        <th>Details</th>
-      </tr>
+      <tr><th>#</th><th>Subreddit</th><th>Title</th><th>Polarity</th><th>Emotion</th><th>Date</th><th>Actions</th><th>Details</th></tr>
     </thead>
     <tbody id="sentimentTableBody"></tbody>
   </table>
@@ -144,132 +135,41 @@
     return date.toISOString().split('T')[0];
   }
 
-  async function fetchRedditData(startDate, endDate) {
-  document.getElementById("loading").style.display = 'block';
-  const subredditStats = {};
-  const dateStats = {};
-  const upliftingPosts = [];
-
-  const subredditTableBody = document.getElementById("subredditTableBody");
-  const sentimentTableBody = document.getElementById("sentimentTableBody");
-  subredditTableBody.innerHTML = '';
-  sentimentTableBody.innerHTML = '';
-
-  for (let subreddit of popularSubreddits) {
-    try {
-      const posts = await fetchPostsForSubreddit(subreddit, startDate, endDate);
-      posts.forEach(post => {
-        const { title, selftext, created_utc, id } = post.data;
-        const postDate = new Date(created_utc * 1000);
-        const content = `${title} ${selftext}`;
-        const sentimentScore = getSentimentScore(content);
-        const emotion = sentimentScore > 0 ? 'Positive' : sentimentScore < 0 ? 'Negative' : 'Neutral';
-        const dateStr = postDate.toISOString().split('T')[0];
-
-        if (sentimentScore > 0) {
-          upliftingPosts.push({ subreddit, title, sentimentScore, emotion, date: dateStr, postText: selftext, id });
-        }
-
-        if (!subredditStats[subreddit]) subredditStats[subreddit] = { count: 0, totalPolarity: 0 };
-        subredditStats[subreddit].count++;
-        subredditStats[subreddit].totalPolarity += sentimentScore;
-
-        if (!dateStats[dateStr]) dateStats[dateStr] = { totalPolarity: 0, count: 0 };
-        dateStats[dateStr].totalPolarity += sentimentScore;
-        dateStats[dateStr].count++;
-      });
-    } catch (e) {
-      console.error(`Error fetching subreddit ${subreddit}:`, e);
-    }
-  }
-
-  upliftingPosts.sort((a, b) => b.sentimentScore - a.sentimentScore);
-  upliftingPosts.slice(0, 30).forEach((post, i) => {
-    const row = document.createElement("tr");
-    row.classList.add('uplifting');
-    row.innerHTML = `
-      <td>${i + 1}</td>
-      <td><a href="https://www.reddit.com/r/${post.subreddit}" target="_blank">${post.subreddit}</a></td>
-      <td>${post.title}</td>
-      <td>${post.sentimentScore.toFixed(2)}</td>
-      <td>${post.emotion}</td>
-      <td>${post.date}</td>
-      <td>
-        <button class="btn" onclick="alert('Boosted!')">👍</button>
-        <button class="btn" onclick="alert('Flagged!')">🚩</button>
-      </td>
-      <td><button class="btn" onclick="toggleDetails(${i})">Details</button></td>
-    `;
-
-    const details = document.createElement("tr");
-    details.classList.add('details');
-    details.innerHTML = `<td colspan="8"><strong>Post Text:</strong> ${post.postText || 'No content available.'}</td>`;
-
-    sentimentTableBody.appendChild(row);
-    sentimentTableBody.appendChild(details);
-  });
-
-  const sorted = Object.entries(subredditStats).sort(([, a], [, b]) =>
-    (b.totalPolarity / b.count) - (a.totalPolarity / a.count)
-  );
-  sorted.slice(0, 10).forEach(([name, stats]) => {
-    const avg = stats.totalPolarity / stats.count;
-    const row = document.createElement("tr");
-    row.innerHTML = `<td><a href="https://www.reddit.com/r/${name}" target="_blank">${name}</a></td>
-                     <td>${stats.count}</td><td>${avg.toFixed(2)}</td>`;
-    subredditTableBody.appendChild(row);
-  });
-
-  plotLineGraph(dateStats);
-  document.getElementById("loading").style.display = 'none';
-}
-
   async function fetchPostsForSubreddit(subreddit, startDate, endDate, limit = 200) {
-  let posts = [];
-  let after = null;
-  let fetched = 0;
-
-  while (fetched < limit) {
-    const url = `https://www.reddit.com/r/${subreddit}/top.json?limit=100${after ? `&after=${after}` : ''}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    if (!data.data) break;
-
-    const batch = data.data.children;
-    after = data.data.after;
-    for (let post of batch) {
-      const createdDate = new Date(post.data.created_utc * 1000);
-      if (createdDate >= startDate && createdDate <= endDate) {
-        posts.push(post);
+    let posts = [];
+    let after = null;
+    let fetched = 0;
+    while (fetched < limit) {
+      const url = `https://www.reddit.com/r/${subreddit}/top.json?limit=100${after ? `&after=${after}` : ''}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (!data.data) break;
+      const batch = data.data.children;
+      after = data.data.after;
+      for (let post of batch) {
+        const createdDate = new Date(post.data.created_utc * 1000);
+        if (createdDate >= startDate && createdDate <= endDate) {
+          posts.push(post);
+        }
       }
+      fetched += batch.length;
+      if (!after) break;
     }
-    fetched += batch.length;
-    if (!after) break;
+    return posts;
   }
-  return posts;
-}
 
-  
   function getSentimentScore(text) {
     const positiveWords = ['happy', 'joy', 'excited', 'love', 'optimistic', 'inspired', 'grateful', 'amazing', 'proud', 'confident', 'hopeful', 'great', 'cheerful', 'uplifted', 'accomplished', 'peaceful', 'motivated', 'encouraged', 'better', 'progress'];
     const negativeWords = ['sad', 'angry', 'hate', 'depressed', 'frustrated', 'hopeless', 'anxious', 'scared', 'tired', 'lonely', 'miserable', 'worthless', 'failure', 'afraid', 'numb', 'crying', 'helpless', 'guilt', 'ashamed', 'stressed', 'death', 'ache', 'pain', 'grief', 'loss', 'broken', 'suffering', 'unworthy', 'hopelessness', 'mourning'];
     const contrastWords = ['but', 'however', 'although'];
     const negativePhrases = ["i don't", "i can't", "i won't", "i shouldn't", "i give up", "i hate myself"];
-
     const NEGATIVE_WEIGHT = 1.5;
     const PHRASE_PENALTY_PER_MATCH = 3;
-
     let positiveCount = 0;
     let negativeCount = 0;
     const lowerText = text.toLowerCase();
-
-    positiveWords.forEach(word => {
-      if (lowerText.includes(word)) positiveCount++;
-    });
-    negativeWords.forEach(word => {
-      if (lowerText.includes(word)) negativeCount++;
-    });
-
+    positiveWords.forEach(word => { if (lowerText.includes(word)) positiveCount++; });
+    negativeWords.forEach(word => { if (lowerText.includes(word)) negativeCount++; });
     contrastWords.forEach(word => {
       const index = lowerText.indexOf(word);
       if (index !== -1) {
@@ -282,18 +182,13 @@
         }
       }
     });
-
     let phrasePenalty = 0;
     negativePhrases.forEach(phrase => {
-      if (lowerText.includes(phrase)) {
-        phrasePenalty += PHRASE_PENALTY_PER_MATCH;
-      }
+      if (lowerText.includes(phrase)) phrasePenalty += PHRASE_PENALTY_PER_MATCH;
     });
-
     const weightedNeg = (negativeCount * NEGATIVE_WEIGHT) + phrasePenalty;
     const total = positiveCount + weightedNeg;
     if (total === 0) return 0;
-
     return (positiveCount - weightedNeg) / total;
   }
 
@@ -303,7 +198,6 @@
       const { totalPolarity, count } = dateStats[date];
       return totalPolarity / count;
     });
-
     const trace = {
       x: dates,
       y: avgPolarity,
@@ -311,12 +205,79 @@
       name: 'Avg Polarity Over Time',
       line: { color: 'mediumseagreen' }
     };
-
     Plotly.newPlot('lineGraph', [trace], {
       xaxis: { title: 'Date' },
       yaxis: { title: 'Average Polarity', range: [-1, 1] },
       margin: { t: 30 }
     });
+  }
+
+  async function fetchRedditData(startDate, endDate) {
+    document.getElementById("loading").style.display = 'block';
+    const subredditStats = {};
+    const dateStats = {};
+    const upliftingPosts = [];
+    document.getElementById("subredditTableBody").innerHTML = '';
+    document.getElementById("sentimentTableBody").innerHTML = '';
+    for (let subreddit of popularSubreddits) {
+      try {
+        const posts = await fetchPostsForSubreddit(subreddit, startDate, endDate);
+        posts.forEach(post => {
+          const { title, selftext, created_utc, id } = post.data;
+          const postDate = new Date(created_utc * 1000);
+          const content = `${title} ${selftext}`;
+          const sentimentScore = getSentimentScore(content);
+          const emotion = sentimentScore > 0 ? 'Positive' : sentimentScore < 0 ? 'Negative' : 'Neutral';
+          const dateStr = postDate.toISOString().split('T')[0];
+          if (sentimentScore > 0) {
+            upliftingPosts.push({ subreddit, title, sentimentScore, emotion, date: dateStr, postText: selftext, id });
+          }
+          if (!subredditStats[subreddit]) subredditStats[subreddit] = { count: 0, totalPolarity: 0 };
+          subredditStats[subreddit].count++;
+          subredditStats[subreddit].totalPolarity += sentimentScore;
+          if (!dateStats[dateStr]) dateStats[dateStr] = { totalPolarity: 0, count: 0 };
+          dateStats[dateStr].totalPolarity += sentimentScore;
+          dateStats[dateStr].count++;
+        });
+      } catch (e) {
+        console.error(`Error fetching subreddit ${subreddit}:`, e);
+      }
+    }
+    upliftingPosts.sort((a, b) => b.sentimentScore - a.sentimentScore);
+    const sentimentTableBody = document.getElementById("sentimentTableBody");
+    upliftingPosts.slice(0, 30).forEach((post, i) => {
+      const row = document.createElement("tr");
+      row.classList.add('uplifting');
+      row.innerHTML = `
+        <td>${i + 1}</td>
+        <td><a href="https://www.reddit.com/r/${post.subreddit}" target="_blank">${post.subreddit}</a></td>
+        <td>${post.title}</td>
+        <td>${post.sentimentScore.toFixed(2)}</td>
+        <td>${post.emotion}</td>
+        <td>${post.date}</td>
+        <td>
+          <button class="btn" onclick="alert('Boosted!')">👍</button>
+          <button class="btn" onclick="alert('Flagged!')">🚩</button>
+        </td>
+        <td><button class="btn" onclick="toggleDetails(${i})">Details</button></td>
+      `;
+      const details = document.createElement("tr");
+      details.classList.add('details');
+      details.innerHTML = `<td colspan="8"><strong>Post Text:</strong> ${post.postText || 'No content available.'}</td>`;
+      sentimentTableBody.appendChild(row);
+      sentimentTableBody.appendChild(details);
+    });
+    const sorted = Object.entries(subredditStats).sort(([, a], [, b]) => (b.totalPolarity / b.count) - (a.totalPolarity / a.count));
+    const subredditTableBody = document.getElementById("subredditTableBody");
+    sorted.slice(0, 10).forEach(([name, stats]) => {
+      const avg = stats.totalPolarity / stats.count;
+      const row = document.createElement("tr");
+      row.innerHTML = `<td><a href="https://www.reddit.com/r/${name}" target="_blank">${name}</a></td>
+                       <td>${stats.count}</td><td>${avg.toFixed(2)}</td>`;
+      subredditTableBody.appendChild(row);
+    });
+    plotLineGraph(dateStats);
+    document.getElementById("loading").style.display = 'none';
   }
 
   function toggleDetails(index) {
@@ -325,10 +286,8 @@
   }
 
   function applyDateRange() {
-    const startDateInput = document.getElementById("startDate").value;
-    const endDateInput = document.getElementById("endDate").value;
-    const startDate = new Date(startDateInput);
-    const endDate = new Date(endDateInput);
+    const startDate = new Date(document.getElementById("startDate").value);
+    const endDate = new Date(document.getElementById("endDate").value);
     fetchRedditData(startDate, endDate);
   }
 
