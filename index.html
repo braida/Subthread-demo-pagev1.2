@@ -131,31 +131,32 @@
 
   function getDefaultStartDate() {
     const date = new Date();
-    date.setMonth(date.getMonth() - 3);
+    date.setMonth(date.getMonth() - 1); // Reduce to 1 month for faster loading
     return date.toISOString().split('T')[0];
   }
 
+  function toggleDetails(index) {
+    const detailsRow = document.querySelectorAll("#sentimentTable tbody .details")[index];
+    detailsRow.style.display = detailsRow.style.display === "table-row" ? "none" : "table-row";
+  }
+
+  function applyDateRange() {
+    const startDate = new Date(document.getElementById("startDate").value);
+    const endDate = new Date(document.getElementById("endDate").value);
+    fetchRedditData(startDate, endDate);
+  }
+  
   async function fetchPostsForSubreddit(subreddit, startDate, endDate, limit = 200) {
     let posts = [];
-    let after = null;
-    let fetched = 0;
-    while (fetched < limit) {
-      const url = `https://www.reddit.com/r/${subreddit}/top.json?limit=100${after ? `&after=${after}` : ''}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      if (!data.data) break;
-      const batch = data.data.children;
-      after = data.data.after;
-      for (let post of batch) {
-        const createdDate = new Date(post.data.created_utc * 1000);
-        if (createdDate >= startDate && createdDate <= endDate) {
-          posts.push(post);
-        }
-      }
-      fetched += batch.length;
-      if (!after) break;
-    }
-    return posts;
+  async function fetchPostsForSubreddit(subreddit, startDate, endDate, limit = 100) {
+    const url = `https://www.reddit.com/r/${subreddit}/top.json?limit=${limit}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (!data.data) return [];
+    return data.data.children.filter(post => {
+      const created = new Date(post.data.created_utc * 1000);
+      return created >= startDate && created <= endDate;
+    });
   }
 
   function getSentimentScore(text) {
@@ -280,20 +281,11 @@
     document.getElementById("loading").style.display = 'none';
   }
 
-  function toggleDetails(index) {
-    const detailsRow = document.querySelectorAll("#sentimentTable tbody .details")[index];
-    detailsRow.style.display = detailsRow.style.display === "table-row" ? "none" : "table-row";
-  }
+  
 
-  function applyDateRange() {
-    const startDate = new Date(document.getElementById("startDate").value);
-    const endDate = new Date(document.getElementById("endDate").value);
-    fetchRedditData(startDate, endDate);
-  }
-
-  document.getElementById("startDate").value = getDefaultStartDate();
+  
+   document.getElementById("startDate").value = getDefaultStartDate();
   document.getElementById("endDate").value = getTodayDate();
-  applyDateRange();
 </script>
 </body>
 </html>
