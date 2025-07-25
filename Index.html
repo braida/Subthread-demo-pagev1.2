@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>🧠 Sentiment Insights – Live Data</title>
+  <title>🤍 Sentiment Insights – Live Data</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
     body {
@@ -20,7 +20,7 @@
     }
     .section {
       margin-top: 30px;
-      padding: 20px;
+      padding:  20px;
       border-radius: 8px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
@@ -84,7 +84,7 @@
   </style>
 </head>
 <body>
-<h1>🧠 Sentiment Insights — Live Data</h1>
+<h1>🤍 Sentiment Insights — Live Data</h1>
 <div class="control-panel">
   <label for="startDate">Start Date:</label>
   <input type="date" id="startDate">
@@ -133,6 +133,17 @@
     'productivity', 'offmychest', 'TrueOffMyChest'
   ];
 
+  function getTodayDate() {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  }
+
+  function getDefaultStartDate() {
+    const date = new Date();
+    date.setMonth(date.getMonth() - 3);
+    return date.toISOString().split('T')[0];
+  }
+
   function getSentimentScore(text) {
     const positiveWords = ['happy', 'joy', 'excited', 'love', 'optimistic', 'inspired', 'grateful', 'amazing', 'proud', 'confident', 'hopeful', 'great', 'cheerful', 'uplifted', 'accomplished', 'peaceful', 'motivated', 'encouraged', 'better', 'progress'];
     const negativeWords = ['sad', 'angry', 'hate', 'depressed', 'frustrated', 'hopeless', 'anxious', 'scared', 'tired', 'lonely', 'miserable', 'worthless', 'failure', 'afraid', 'numb', 'crying', 'helpless', 'guilt', 'ashamed', 'stressed', 'death', 'ache', 'pain', 'grief', 'loss', 'broken', 'suffering', 'unworthy', 'hopelessness', 'mourning'];
@@ -180,30 +191,44 @@
     return (positiveCount - weightedNeg) / total;
   }
 
-  async function fetchPostsForSubreddit(subreddit, startDate, endDate, limit = 200) {
-    let posts = [];
-    let after = null;
-    let fetched = 0;
+  function plotLineGraph(dateStats) {
+    const dates = Object.keys(dateStats).sort();
+    const avgPolarity = dates.map(date => {
+      const { totalPolarity, count } = dateStats[date];
+      return totalPolarity / count;
+    });
 
-    while (fetched < limit) {
-      const url = `https://www.reddit.com/r/${subreddit}/top.json?limit=100${after ? `&after=${after}` : ''}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      if (!data.data) break;
+    const trace = {
+      x: dates,
+      y: avgPolarity,
+      mode: 'lines+markers',
+      name: 'Avg Polarity Over Time',
+      line: { color: 'mediumseagreen' }
+    };
 
-      const batch = data.data.children;
-      after = data.data.after;
-      for (let post of batch) {
-        const createdDate = new Date(post.data.created_utc * 1000);
-        if (createdDate >= startDate && createdDate <= endDate) {
-          posts.push(post);
-        }
-      }
-      fetched += batch.length;
-      if (!after) break;
-    }
-    return posts;
+    Plotly.newPlot('lineGraph', [trace], {
+      xaxis: { title: 'Date' },
+      yaxis: { title: 'Average Polarity', range: [-1, 1] },
+      margin: { t: 30 }
+    });
   }
+
+  function toggleDetails(index) {
+    const detailsRow = document.querySelectorAll("#sentimentTable tbody .details")[index];
+    detailsRow.style.display = detailsRow.style.display === "table-row" ? "none" : "table-row";
+  }
+
+  function applyDateRange() {
+    const startDateInput = document.getElementById("startDate").value;
+    const endDateInput = document.getElementById("endDate").value;
+    const startDate = new Date(startDateInput);
+    const endDate = new Date(endDateInput);
+    fetchRedditData(startDate, endDate);
+  }
+
+  document.getElementById("startDate").value = getDefaultStartDate();
+  document.getElementById("endDate").value = getTodayDate();
+  applyDateRange();
 </script>
 </body>
 </html>
