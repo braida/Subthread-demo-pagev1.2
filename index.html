@@ -117,7 +117,7 @@
   <div id="lineGraph" style="height:400px;"></div>
 </div>
 <script>
-  const popularSubreddits = ['selfimprovement', 'depression', 'mentalhealth', 'GetMotivated', 'work','ireland','tech','IRL','tldr','TLDR'];
+  const popularSubreddits = ['selfimprovement', 'mentalhealth', 'GetMotivated', 'work','palestine','tech','IRL','tldr','TLDR'];
 
   function getTodayDate() {
     const today = new Date();
@@ -126,7 +126,7 @@
 
   function getDefaultStartDate() {
     const date = new Date();
-    date.setMonth(date.getDate() - 30);
+    date.setMonth(date.getMonth() - 1);
     return date.toISOString().split('T')[0];
   }
 
@@ -305,4 +305,4 @@
   applyDateRange();
 </script>
 </body>
-    </html>
+  </html>
