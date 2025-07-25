@@ -205,16 +205,15 @@
   }
 
   function toggleDetails(index) {
-    const detailsRow = document.querySelectorAll(".details")[index];
-    if (detailsRow) {
-      detailsRow.style.display = detailsRow.style.display === "table-row" ? "none" : "table-row";
-    }
+    const detailsRow = document.querySelectorAll("#sentimentTable tbody .details")[index];
+    detailsRow.style.display = detailsRow.style.display === "table-row" ? "none" : "table-row";
   }
 
+
   function applyDateRange() {
-    const startDate = new Date(document.getElementById("startDate").value);
-    const endDate = new Date(document.getElementById("endDate").value);
-    fetchRedditData(startDate, endDate);
+    const start = new Date(document.getElementById("startDate").value);
+    const end = new Date(document.getElementById("endDate").value);
+    fetchRedditData(start, end);
   }
 
   function plotLineGraph(dateStats) {
