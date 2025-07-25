@@ -84,7 +84,7 @@
   </style>
 </head>
 <body>
-<h1>🤍 Sentiment Insights — Live Data</h1>
+<h1>❤️‍🩹 Sentiment Insights — Live Data</h1>
 <div class="control-panel">
   <label for="startDate">Start Date:</label>
   <input type="date" id="startDate">
@@ -126,14 +126,14 @@
 
   function getDefaultStartDate() {
     const date = new Date();
-    date.setMonth(date.getDate() - 30);
+    date.setMonth(date.getMonth() - 1);
     return date.toISOString().split('T')[0];
   }
 
   function applyDateRange() {
     const start = new Date(document.getElementById("startDate").value);
     const end = new Date(document.getElementById("endDate").value);
-    fetchRedditData(start, end);
+    fetchRedditData(startDate, endDate);
   }
 
   function toggleDetails(index) {
