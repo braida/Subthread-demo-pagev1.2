@@ -84,7 +84,7 @@
   </style>
 </head>
 <body>
-<h1>❤️‍🩹 Sentiment Insights — Live Data</h1>
+<h1>🤍 Sentiment Insights — Live Data</h1>
 <div class="control-panel">
   <label for="startDate">Start Date:</label>
   <input type="date" id="startDate">
@@ -107,7 +107,7 @@
   <p>Top 30 Uplifting Posts</p>
   <table id="sentimentTable">
     <thead>
-      <tr><th>#</th><th>Subreddit</th><th>Title</th><th>Polarity</th><th>Emotion</th><th>Date</th><th>Reddit Upvote</th><th>Actions</th><th>Details</th></tr>
+      <tr><th>#</th><th>Subreddit</th><th>Title</th><th>Polarity</th><th>Emotion</th><th>Date</th><th>Score</th><th>Actions</th><th>Details</th></tr>
     </thead>
     <tbody id="sentimentTableBody"></tbody>
   </table>
@@ -126,7 +126,7 @@
 
   function getDefaultStartDate() {
     const date = new Date();
-    date.setMonth(date.getMonth() - 1);
+    date.setMonth(date.getDate() - 30);
     return date.toISOString().split('T')[0];
   }
 
@@ -287,8 +287,6 @@
     plotLineGraph(dateStats);
     document.getElementById("loading").style.display = 'none';
   }
-
-  
 
   function plotLineGraph(dateStats) {
     const dates = Object.keys(dateStats).sort();
