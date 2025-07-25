@@ -203,7 +203,7 @@
     return (positiveCount - weightedNegatives) / totalWeighted;
   }
 
-  async function fetchRedditData(startDate, endDate, limit= 50000) {
+  async function fetchRedditData(startDate, endDate) {
     document.getElementById("loading").style.display = 'block';
     const subredditStats = {};
     const dateStats = {};
