@@ -146,8 +146,6 @@
     fetchRedditData(startDate, endDate);
   }
   
-  async function fetchPostsForSubreddit(subreddit, startDate, endDate, limit = 200) {
-    let posts = [];
   async function fetchPostsForSubreddit(subreddit, startDate, endDate, limit = 100) {
     const url = `https://www.reddit.com/r/${subreddit}/top.json?limit=${limit}`;
     const response = await fetch(url);
@@ -159,62 +157,9 @@
     });
   }
 
-  function getSentimentScore(text) {
-    const positiveWords = ['happy', 'joy', 'excited', 'love', 'optimistic', 'inspired', 'grateful', 'amazing', 'proud', 'confident', 'hopeful', 'great', 'cheerful', 'uplifted', 'accomplished', 'peaceful', 'motivated', 'encouraged', 'better', 'progress'];
-    const negativeWords = ['sad', 'angry', 'hate', 'depressed', 'frustrated', 'hopeless', 'anxious', 'scared', 'tired', 'lonely', 'miserable', 'worthless', 'failure', 'afraid', 'numb', 'crying', 'helpless', 'guilt', 'ashamed', 'stressed', 'death', 'ache', 'pain', 'grief', 'loss', 'broken', 'suffering', 'unworthy', 'hopelessness', 'mourning'];
-    const contrastWords = ['but', 'however', 'although'];
-    const negativePhrases = ["i don't", "i can't", "i won't", "i shouldn't", "i give up", "i hate myself"];
-    const NEGATIVE_WEIGHT = 1.5;
-    const PHRASE_PENALTY_PER_MATCH = 3;
-    let positiveCount = 0;
-    let negativeCount = 0;
-    const lowerText = text.toLowerCase();
-    positiveWords.forEach(word => { if (lowerText.includes(word)) positiveCount++; });
-    negativeWords.forEach(word => { if (lowerText.includes(word)) negativeCount++; });
-    contrastWords.forEach(word => {
-      const index = lowerText.indexOf(word);
-      if (index !== -1) {
-        const before = lowerText.slice(0, index);
-        for (const pos of positiveWords) {
-          if (before.includes(pos)) {
-            positiveCount = Math.max(0, positiveCount - 2);
-            break;
-          }
-        }
-      }
-    });
-    let phrasePenalty = 0;
-    negativePhrases.forEach(phrase => {
-      if (lowerText.includes(phrase)) phrasePenalty += PHRASE_PENALTY_PER_MATCH;
-    });
-    const weightedNeg = (negativeCount * NEGATIVE_WEIGHT) + phrasePenalty;
-    const total = positiveCount + weightedNeg;
-    if (total === 0) return 0;
-    return (positiveCount - weightedNeg) / total;
-  }
-
-  function plotLineGraph(dateStats) {
-    const dates = Object.keys(dateStats).sort();
-    const avgPolarity = dates.map(date => {
-      const { totalPolarity, count } = dateStats[date];
-      return totalPolarity / count;
-    });
-    const trace = {
-      x: dates,
-      y: avgPolarity,
-      mode: 'lines+markers',
-      name: 'Avg Polarity Over Time',
-      line: { color: 'mediumseagreen' }
-    };
-    Plotly.newPlot('lineGraph', [trace], {
-      xaxis: { title: 'Date' },
-      yaxis: { title: 'Average Polarity', range: [-1, 1] },
-      margin: { t: 30 }
-    });
-  }
-
   async function fetchRedditData(startDate, endDate) {
-    document.getElementById("loading").style.display = 'block';
+    console.log("Fetching data for:", startDate, "to", endDate);
+    
     const subredditStats = {};
     const dateStats = {};
     const upliftingPosts = [];
@@ -277,6 +222,66 @@
                        <td>${stats.count}</td><td>${avg.toFixed(2)}</td>`;
       subredditTableBody.appendChild(row);
     });
+ 
+  
+  }
+
+
+  function getSentimentScore(text) {
+    const positiveWords = ['happy', 'joy', 'excited', 'love', 'optimistic', 'inspired', 'grateful', 'amazing', 'proud', 'confident', 'hopeful', 'great', 'cheerful', 'uplifted', 'accomplished', 'peaceful', 'motivated', 'encouraged', 'better', 'progress'];
+    const negativeWords = ['sad', 'angry', 'hate', 'depressed', 'frustrated', 'hopeless', 'anxious', 'scared', 'tired', 'lonely', 'miserable', 'worthless', 'failure', 'afraid', 'numb', 'crying', 'helpless', 'guilt', 'ashamed', 'stressed', 'death', 'ache', 'pain', 'grief', 'loss', 'broken', 'suffering', 'unworthy', 'hopelessness', 'mourning'];
+    const contrastWords = ['but', 'however', 'although'];
+    const negativePhrases = ["i don't", "i can't", "i won't", "i shouldn't", "i give up", "i hate myself"];
+    const NEGATIVE_WEIGHT = 1.5;
+    const PHRASE_PENALTY_PER_MATCH = 3;
+    let positiveCount = 0;
+    let negativeCount = 0;
+    const lowerText = text.toLowerCase();
+    positiveWords.forEach(word => { if (lowerText.includes(word)) positiveCount++; });
+    negativeWords.forEach(word => { if (lowerText.includes(word)) negativeCount++; });
+    contrastWords.forEach(word => {
+      const index = lowerText.indexOf(word);
+      if (index !== -1) {
+        const before = lowerText.slice(0, index);
+        for (const pos of positiveWords) {
+          if (before.includes(pos)) {
+            positiveCount = Math.max(0, positiveCount - 2);
+            break;
+          }
+        }
+      }
+    });
+    let phrasePenalty = 0;
+    negativePhrases.forEach(phrase => {
+      if (lowerText.includes(phrase)) phrasePenalty += PHRASE_PENALTY_PER_MATCH;
+    });
+    const weightedNeg = (negativeCount * NEGATIVE_WEIGHT) + phrasePenalty;
+    const total = positiveCount + weightedNeg;
+    if (total === 0) return 0;
+    return (positiveCount - weightedNeg) / total;
+  }
+
+  function plotLineGraph(dateStats) {
+    const dates = Object.keys(dateStats).sort();
+    const avgPolarity = dates.map(date => {
+      const { totalPolarity, count } = dateStats[date];
+      return totalPolarity / count;
+    });
+    const trace = {
+      x: dates,
+      y: avgPolarity,
+      mode: 'lines+markers',
+      name: 'Avg Polarity Over Time',
+      line: { color: 'mediumseagreen' }
+    };
+    Plotly.newPlot('lineGraph', [trace], {
+      xaxis: { title: 'Date' },
+      yaxis: { title: 'Average Polarity', range: [-1, 1] },
+      margin: { t: 30 }
+    });
+  }
+
+  
     plotLineGraph(dateStats);
     document.getElementById("loading").style.display = 'none';
   }
