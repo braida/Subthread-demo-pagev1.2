@@ -84,7 +84,7 @@
   </style>
 </head>
 <body>
-<h1> 🤍Sentiment Insights — Live Data</h1>
+<h1>❤️‍🩹 Sentiment Insights — Live Data</h1>
 <div class="control-panel">
   <label for="startDate">Start Date:</label>
   <input type="date" id="startDate">
@@ -107,7 +107,7 @@
   <p>Top 30 Uplifting Posts</p>
   <table id="sentimentTable">
     <thead>
-      <tr><th>#</th><th>Subreddit</th><th>Title</th><th>Polarity</th><th>Emotion</th><th>Date</th><th>Reddit Score</th><th>Actions</th><th>Details</th></tr>
+      <tr><th>#</th><th>Subreddit</th><th>Title</th><th>Polarity</th><th>Emotion</th><th>Date</th><th>Reddit Upvote</th><th>Actions</th><th>Details</th></tr>
     </thead>
     <tbody id="sentimentTableBody"></tbody>
   </table>
@@ -135,11 +135,6 @@
     const end = new Date(document.getElementById("endDate").value);
     fetchRedditData(start, end);
   }
-function toggleControversial() {
-    showControversial = !showControversial;
-    document.getElementById("toggleBtn").innerText = showControversial ? "Show Most Positive Posts" : "Show Controversial Posts";
-    applyDateRange();
-  }
 
   function toggleDetails(index) {
     const detailsRow = document.querySelectorAll("#sentimentTable tbody .details")[index];
@@ -156,18 +151,17 @@ function toggleControversial() {
     const negativeWords = [
       'sad', 'angry', 'hate', 'depressed', 'frustrated', 'hopeless', 'anxious',
       'scared', 'tired', 'lonely', 'miserable', 'worthless', 'failure', 'afraid',
-      'numb','cried','cry', 'crying', 'helpless', 'guilt', 'ashamed', 'stressed','struggle','struggling','pessimistic','worry', 'worries',
-      'death', 'ache', 'pain', 'grief', 'loss', 'break-up','broken','broke', 'heal', 'suffering', 'punch', 'beating','unworthy', 'hopelessness', 'mourning'
+      'numb', 'crying', 'helpless', 'guilt', 'ashamed', 'stressed',
+      'death', 'ache', 'pain', 'grief', 'loss', 'broken', 'suffering', 'unworthy', 'hopelessness', 'mourning'
     ];
 
-    const contrastWords = ['but','despite', 'however', 'although'];
+    const contrastWords = ['but', 'however', 'although'];
     const negativePhrases = [
-      "don't", "can't","disgusting","disgusted", "won't","I'd","could’ve", "I would", "shouldn't", "give up", "hate myself", "suicide", "trauma", "struggle", "punching", "failed", "failure", 
-      "multiple attempts but", "worst part", "still pessimistic", "undervalued", "ignored", "disappointed", "shocked", "insulting"
+      "don't", "can't", "won't", "shouldn't", "give up", "hate myself", "suicide", "trauma"
     ];
 
-    const NEGATIVE_WEIGHT = 3;
-    const PHRASE_PENALTY_PER_MATCH = 5;
+    const NEGATIVE_WEIGHT = 2;
+    const PHRASE_PENALTY_PER_MATCH = 3;
 
     let positiveCount = 0;
     let negativeCount = 0;
@@ -214,6 +208,7 @@ function toggleControversial() {
     const subredditStats = {};
     const dateStats = {};
     const upliftingPosts = [];
+
     const subredditTableBody = document.getElementById("subredditTableBody");
     const sentimentTableBody = document.getElementById("sentimentTableBody");
     subredditTableBody.innerHTML = '';
@@ -249,20 +244,12 @@ function toggleControversial() {
       }
     }
 
-    let postsToShow = [...upliftingPosts];
-    if (showControversial) {
-      postsToShow = postsToShow
-        .filter(p => Math.abs(p.sentimentScore) > 0.5 && p.score < 15)
-        .sort((a, b) => (Math.abs(b.sentimentScore) / (b.score + 1)) - (Math.abs(a.sentimentScore) / (a.score + 1)));
-    } else {
-      postsToShow = postsToShow
-        .sort((a, b) => {
-          const polarityDiff = b.sentimentScore - a.sentimentScore;
-          return polarityDiff !== 0 ? polarityDiff : b.score - a.score;
-        });
-    }
+    upliftingPosts.sort((a, b) => {
+      const polarityDiff = b.sentimentScore - a.sentimentScore;
+      return polarityDiff !== 0 ? polarityDiff : b.score - a.score;
+    });
 
-    postsToShow.slice(0, 30).forEach((post, i) => {
+    upliftingPosts.slice(0, 30).forEach((post, i) => {
       const row = document.createElement("tr");
       row.classList.add('uplifting');
       row.innerHTML = `
@@ -277,9 +264,11 @@ function toggleControversial() {
             <button class="btn" onclick="alert('Flagged!')">🚩</button></td>
         <td><button class="btn" onclick="toggleDetails(${i})">Details</button></td>
       `;
+
       const details = document.createElement("tr");
       details.classList.add("details");
       details.innerHTML = `<td colspan="9"><strong>Post Text:</strong> ${post.postText || 'No content available.'}</td>`;
+
       sentimentTableBody.appendChild(row);
       sentimentTableBody.appendChild(details);
     });
@@ -294,7 +283,7 @@ function toggleControversial() {
                        <td>${stats.count}</td><td>${avg.toFixed(2)}</td>`;
       subredditTableBody.appendChild(row);
     });
-    
+
     plotLineGraph(dateStats);
     document.getElementById("loading").style.display = 'none';
   }
