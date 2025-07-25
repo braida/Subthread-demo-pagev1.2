@@ -126,7 +126,7 @@
 
   function getDefaultStartDate() {
     const date = new Date();
-    date.setMonth(date.getDate() - 30);
+    date.setMonth(date.getMonth() - 1);
     return date.toISOString().split('T')[0];
   }
 
