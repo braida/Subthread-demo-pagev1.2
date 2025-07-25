@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -288,14 +288,21 @@
     document.getElementById("loading").style.display = 'none';
   }
 
-    plotLineGraph(dateStats);
-    document.getElementById("loading").style.display = 'none';
+  function plotLineGraph(dateStats) {
+    const dates = Object.keys(dateStats).sort();
+    const avgPolarity = dates.map(d => dateStats[d].totalPolarity / dateStats[d].count);
+    Plotly.newPlot('lineGraph', [{
+      x: dates, y: avgPolarity, mode: 'lines+markers',
+      line: { color: 'mediumseagreen' }
+    }], {
+      xaxis: { title: 'Date' }, yaxis: { title: 'Avg Polarity', range: [-1, 1] },
+      margin: { t: 30 }
+    });
   }
 
   document.getElementById("startDate").value = getDefaultStartDate();
   document.getElementById("endDate").value = getTodayDate();
   applyDateRange();
 </script>
-
 </body>
 </html>
